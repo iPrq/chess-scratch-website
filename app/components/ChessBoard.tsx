@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { JSX } from "react";
-import { getValidMoves } from "@/lib/chessLogic";
+import { getLegalMoves, isKingInCheck } from "../../lib/chessLogic";
 
 type PieceType = "pawn" | "rook" | "knight" | "bishop" | "queen" | "king";
 type Color = "white" | "black";
@@ -14,7 +14,6 @@ type Piece = {
 
 type Square = Piece | null;
 type Board = Square[][];
-
 
 const createPawnRow = (color: Color): Piece[] =>
   Array.from({ length: 8 }, () => ({ type: "pawn", color }));
@@ -72,14 +71,20 @@ const toChessNotation = (row: number, col: number): string => {
 export default function ChessBoard(): JSX.Element {
   const [board, setBoard] = useState<Board>(initialBoard);
   const [selected, setSelected] = useState<[number, number] | null>(null);
-  
-  
+  const [validMoves, setValidMoves] = useState<[number, number][]>([]);
+  const [turn, setTurn] = useState<"white" | "black">("white");
+  const whiteInCheck = isKingInCheck(board, "white");
+  const blackInCheck = isKingInCheck(board, "black");
+
   const handleClick = (row: number, col: number) => {
     const clickedSquare = board[row][col];
 
     if (!selected) {
-      if (clickedSquare) {
+      if (clickedSquare && clickedSquare.color === turn) {
         setSelected([row, col]);
+
+        const moves = getLegalMoves(board, clickedSquare, row, col);
+        setValidMoves(moves);
       }
       return;
     }
@@ -89,19 +94,27 @@ export default function ChessBoard(): JSX.Element {
 
     if (!selectedPiece) {
       setSelected(null);
+      setValidMoves([]);
       return;
     }
 
-    const validMoves = getValidMoves(board, selectedPiece, fromRow, fromCol);
+    if (clickedSquare && clickedSquare.color === turn) {
+      setSelected([row, col]);
 
-    const isValidMove = validMoves.some(
-    ([r, c]) => r === row && c === col
+      const moves = getLegalMoves(board, clickedSquare, row, col);
+      setValidMoves(moves);
+      return;
+    }
+
+
+    const isMoveValid = validMoves.some(
+      ([r, c]) => r === row && c === col
     );
 
-    if (!isValidMove) {
-    setSelected(null);
-    return;
-  }
+    if (!isMoveValid) {
+      return; 
+    }
+
 
     const newBoard = board.map((r) => [...r]);
 
@@ -110,6 +123,9 @@ export default function ChessBoard(): JSX.Element {
 
     setBoard(newBoard);
     setSelected(null);
+    setValidMoves([]);
+
+    setTurn((prev) => (prev === "white" ? "black" : "white"));
 
     console.log(
       `${selectedPiece.color} ${selectedPiece.type} moved from ${toChessNotation(
@@ -120,51 +136,95 @@ export default function ChessBoard(): JSX.Element {
   };
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(8, 60px)",
-        border: "2px solid black",
-        width: "480px",
-      }}
-    >
-      {board.map((rowArr, row) =>
-        rowArr.map((piece, col) => {
-          const isDark = (row + col) % 2 === 1;
-
-          const isSelected =
-            selected?.[0] === row && selected?.[1] === col;
-
-          return (
-            <div
-              key={`${row}-${col}`}
-              onClick={() => handleClick(row, col)}
-              style={{
-                width: "60px",
-                height: "60px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: isSelected
-                  ? "yellow"
-                  : isDark
-                  ? "#769656"
-                  : "#eeeed2",
-                cursor: "pointer",
-              }}
-            >
-              {piece && (
-                <img
-                  src={getPieceImage(piece)}
-                  alt="piece"
-                  width={50}
-                  height={50}
-                />
-              )}
-            </div>
-          );
-        })
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+      {(whiteInCheck || blackInCheck) && (
+        <div
+          style={{
+            backgroundColor: "#ffe1e1",
+            color: "#8b0000",
+            border: "1px solid #ff8a8a",
+            padding: "8px 10px",
+            width: "480px",
+            fontWeight: 600,
+          }}
+        >
+          {whiteInCheck && "White king is in check! "}
+          {blackInCheck && "Black king is in check!"}
+        </div>
       )}
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(8, 60px)",
+          border: "2px solid black",
+          width: "480px",
+        }}
+      >
+        {board.map((rowArr, row) =>
+          rowArr.map((piece, col) => {
+            const isDark = (row + col) % 2 === 1;
+
+            const isSelected =
+              selected?.[0] === row && selected?.[1] === col;
+
+            const showMoveDot = validMoves.some(
+              ([r, c]) => r === row && c === col
+            );
+
+            const isCheckedKing =
+              piece?.type === "king" &&
+              ((piece.color === "white" && whiteInCheck) ||
+                (piece.color === "black" && blackInCheck));
+
+            return (
+              <div
+                key={`${row}-${col}`}
+                onClick={() => handleClick(row, col)}
+                style={{
+                  width: "60px",
+                  height: "60px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: isSelected
+                    ? "yellow"
+                    : isDark
+                    ? "#769656"
+                    : "#eeeed2",
+                  boxShadow: isCheckedKing ? "inset 0 0 0 4px #d10000" : "none",
+                  cursor: "pointer",
+                  position: "relative",
+                }}
+              >
+                {showMoveDot && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      width: piece ? "18px" : "14px",
+                      height: piece ? "18px" : "14px",
+                      borderRadius: "50%",
+                      backgroundColor: "black",
+                      opacity: piece ? 0.45 : 0.7,
+                      zIndex: 2,
+                    }}
+                  />
+                )}
+
+                {piece && (
+                  <img
+                    src={getPieceImage(piece)}
+                    alt="piece"
+                    width={50}
+                    height={50}
+                    style={{ position: "relative", zIndex: 1 }}
+                  />
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }

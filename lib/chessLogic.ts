@@ -240,3 +240,78 @@ const getKingMoves = (
 
   return moves;
 };
+
+
+const findKing = (board: Board, color: Color): [number, number] | null => {
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = board[r][c];
+      if (piece && piece.type === "king" && piece.color === color) {
+        return [r, c];
+      }
+    }
+  }
+  return null;
+};
+
+
+const isSquareAttacked = (
+  board: Board,
+  row: number,
+  col: number,
+  byColor: Color
+): boolean => {
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = board[r][c];
+
+      if (piece && piece.color === byColor) {
+        const moves = getValidMoves(board, piece, r, c);
+
+        if (moves.some(([mr, mc]) => mr === row && mc === col)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+};
+
+
+export const isKingInCheck = (board: Board, color: Color): boolean => {
+  const kingPos = findKing(board, color);
+
+  if (!kingPos) return false;
+
+  const [kr, kc] = kingPos;
+
+  const enemyColor = color === "white" ? "black" : "white";
+
+  return isSquareAttacked(board, kr, kc, enemyColor);
+};
+
+export const getLegalMoves = (
+  board: Board,
+  piece: Piece,
+  row: number,
+  col: number
+): [number, number][] => {
+  const rawMoves = getValidMoves(board, piece, row, col);
+
+  const legalMoves: [number, number][] = [];
+
+  for (let [r, c] of rawMoves) {
+    const newBoard = board.map((rowArr) => [...rowArr]);
+
+    // simulate move
+    newBoard[r][c] = piece;
+    newBoard[row][col] = null;
+
+    // check if king is in check AFTER move
+    if (!isKingInCheck(newBoard, piece.color)) {
+      legalMoves.push([r, c]);
+    }
+  }
+
+  return legalMoves;
+};
