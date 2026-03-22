@@ -13,9 +13,23 @@ type Piece = {
   color: Color;
 };
 
-type Board = Piece[][];
+type Square = Piece | null;
+type Board = Square[][];
 
 const createpawnrow = (color: Color): Piece[] => Array.from({ length: 8 }, () => ({ type: "pawn", color }));
+
+const getPieceImage= (piece: Piece): string => {
+    const color = piece.color === "white" ? "w" : "b";
+    const typeMap: Record<PieceType, string> = {
+        pawn: "p",
+        rook: "r",
+        knight: "n",
+        bishop: "b",
+        queen: "q",
+        king: "k",
+    };
+    return `pieces/${color}${typeMap[piece.type]}.svg`;
+}
 
 const initialBoard: Board = [
     [
@@ -46,27 +60,17 @@ const initialBoard: Board = [
     ]
 ]
 
-const piecemap: Record<string, string> = {
-    pawn_white: "♙",
-    rook_white: "♖",
-    knight_white: "♘",
-    bishop_white: "♗",
-    queen_white: "♕",
-    king_white: "♔",
-
-    pawn_black: "♟",
-    rook_black: "♜",
-    knight_black: "♞",
-    bishop_black: "♝",
-    queen_black: "♛",
-    king_black: "♚",
+const toChessNotation = (row: number, col: number): string => {
+  const file = String.fromCharCode(97 + col); 
+  const rank = 8 - row; 
+  return `${file}${rank}`;
 };
 
 
 export default function ChessBoard(): JSX.Element {
-  const [board, setBoard] = useState<Board>(initialBoard);
+  const [board] = useState<Board>(initialBoard);
 
-  return (
+      return (
     <div
       style={{
         display: "grid",
@@ -81,25 +85,29 @@ export default function ChessBoard(): JSX.Element {
           return (
             <div
               key={`${row}-${col}`}
-              onClick={() => console.log(row, col, piece)}
+              onClick={() => console.log(toChessNotation(row, col))}
               style={{
                 width: "60px",
                 height: "60px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "28px",
-                cursor: "pointer",
                 backgroundColor: isDark ? "#769656" : "#eeeed2",
+                cursor: "pointer",
               }}
             >
-              {piece
-                ? piecemap[`${piece.type}_${piece.color}`]
-                : ""}
+              {piece && (
+                <img
+                  src={getPieceImage(piece)}
+                  alt="piece"
+                  width={60}
+                  height={60}
+                />
+              )}
             </div>
           );
         })
       )}
     </div>
   );
-}
+}       
