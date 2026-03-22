@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { JSX } from "react";
+import { getValidMoves } from "@/lib/chessLogic";
 
 type PieceType = "pawn" | "rook" | "knight" | "bishop" | "queen" | "king";
 type Color = "white" | "black";
@@ -71,7 +72,8 @@ const toChessNotation = (row: number, col: number): string => {
 export default function ChessBoard(): JSX.Element {
   const [board, setBoard] = useState<Board>(initialBoard);
   const [selected, setSelected] = useState<[number, number] | null>(null);
-
+  
+  
   const handleClick = (row: number, col: number) => {
     const clickedSquare = board[row][col];
 
@@ -89,6 +91,17 @@ export default function ChessBoard(): JSX.Element {
       setSelected(null);
       return;
     }
+
+    const validMoves = getValidMoves(board, selectedPiece, fromRow, fromCol);
+
+    const isValidMove = validMoves.some(
+    ([r, c]) => r === row && c === col
+    );
+
+    if (!isValidMove) {
+    setSelected(null);
+    return;
+  }
 
     const newBoard = board.map((r) => [...r]);
 
