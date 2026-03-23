@@ -1,10 +1,23 @@
-
 export type PieceType = "pawn" | "rook" | "knight" | "bishop" | "queen" | "king";
 export type Color = "white" | "black";
 
 export type Piece = {
   type: PieceType;
   color: Color;
+};
+
+export type HasMovedState = {
+  whiteKing: boolean;
+  blackKing: boolean;
+  whiteRookLeft: boolean;
+  whiteRookRight: boolean;
+  blackRookLeft: boolean;
+  blackRookRight: boolean;
+};
+
+export type LastMove = {
+  from: [number, number];
+  to: [number, number];
 };
 
 export type Square = Piece | null;
@@ -16,11 +29,13 @@ export const getValidMoves = (
   board: Board,
   piece: Piece,
   row: number,
-  col: number
+  col: number,
+  hasMoved?: HasMovedState,
+  lastMove?: LastMove | null
 ): [number, number][] => {
   switch (piece.type) {
     case "pawn":
-      return getPawnMoves(board, piece, row, col);
+      return getPawnMoves(board, piece, row, col, lastMove ?? null);
     case "rook":
       return getRookMoves(board, piece, row, col);
     case "knight":
@@ -30,7 +45,7 @@ export const getValidMoves = (
     case "queen":
       return getQueenMoves(board, piece, row, col);
     case "king":
-      return getKingMoves(board, piece, row, col);
+      return getKingMoves(board, piece, row, col, hasMoved);
     default:
       return [];
   }
@@ -44,7 +59,8 @@ const getPawnMoves = (
   board: Board,
   piece: Piece,
   row: number,
-  col: number
+  col: number,
+  lastMove: LastMove | null
 ): [number, number][] => {
   const moves: [number, number][] = [];
 
@@ -71,6 +87,30 @@ const getPawnMoves = (
 
     if (target && target.color !== piece.color) {
       moves.push([row + direction, newCol]);
+    }
+  }
+
+  // en passant
+  if (lastMove) {
+    const [fromRow, fromCol] = lastMove.from;
+    const [toRow, toCol] = lastMove.to;
+    const movedPiece = board[toRow]?.[toCol];
+
+    const isOpponentPawnDoubleStep =
+      !!movedPiece &&
+      movedPiece.type === "pawn" &&
+      movedPiece.color !== piece.color &&
+      Math.abs(toRow - fromRow) === 2;
+
+    const isAdjacent = toRow === row && Math.abs(toCol - col) === 1;
+    const enPassantRow = row + direction;
+
+    if (
+      isOpponentPawnDoubleStep &&
+      isAdjacent &&
+      board[enPassantRow]?.[toCol] === null
+    ) {
+      moves.push([enPassantRow, toCol]);
     }
   }
 
@@ -217,7 +257,8 @@ const getKingMoves = (
   board: Board,
   piece: Piece,
   row: number,
-  col: number
+  col: number,
+  hasMoved?: HasMovedState
 ): [number, number][] => {
   const moves: [number, number][] = [];
 
@@ -238,7 +279,87 @@ const getKingMoves = (
     }
   }
 
+  const colorPrefix = piece.color === "white" ? "white" : "black";
+  const kingKey = `${colorPrefix}King` as const;
+  const rookLeftKey = `${colorPrefix}RookLeft` as const;
+  const rookRightKey = `${colorPrefix}RookRight` as const;
+  const enemyColor: Color = piece.color === "white" ? "black" : "white";
+
+  // castling
+  if (hasMoved && !hasMoved[kingKey]) {
+    const homeRow = piece.color === "white" ? 7 : 0;
+    const kingOnHomeSquare = row === homeRow && col === 4;
+
+    if (kingOnHomeSquare && !isSquareAttacked(board, row, col, enemyColor)) {
+      const kingsideRook = board[homeRow][7];
+      const canCastleKingside =
+        kingsideRook?.type === "rook" &&
+        kingsideRook.color === piece.color &&
+        !hasMoved[rookRightKey] &&
+        board[homeRow][5] === null &&
+        board[homeRow][6] === null &&
+        !isSquareAttacked(board, homeRow, 5, enemyColor) &&
+        !isSquareAttacked(board, homeRow, 6, enemyColor);
+
+      if (canCastleKingside) {
+        moves.push([homeRow, 6]);
+      }
+
+      const queensideRook = board[homeRow][0];
+      const canCastleQueenside =
+        queensideRook?.type === "rook" &&
+        queensideRook.color === piece.color &&
+        !hasMoved[rookLeftKey] &&
+        board[homeRow][1] === null &&
+        board[homeRow][2] === null &&
+        board[homeRow][3] === null &&
+        !isSquareAttacked(board, homeRow, 3, enemyColor) &&
+        !isSquareAttacked(board, homeRow, 2, enemyColor);
+
+      if (canCastleQueenside) {
+        moves.push([homeRow, 2]);
+      }
+    }
+  }
+
   return moves;
+};
+
+const getAttackMoves = (
+  board: Board,
+  piece: Piece,
+  row: number,
+  col: number
+): [number, number][] => {
+  if (piece.type === "pawn") {
+    const direction = piece.color === "white" ? -1 : 1;
+    const attacks: [number, number][] = [];
+    for (const dc of [-1, 1]) {
+      const r = row + direction;
+      const c = col + dc;
+      if (r >= 0 && r < 8 && c >= 0 && c < 8) {
+        attacks.push([r, c]);
+      }
+    }
+    return attacks;
+  }
+
+  if (piece.type === "king") {
+    const attacks: [number, number][] = [];
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const r = row + dr;
+        const c = col + dc;
+        if (r >= 0 && r < 8 && c >= 0 && c < 8) {
+          attacks.push([r, c]);
+        }
+      }
+    }
+    return attacks;
+  }
+
+  return getValidMoves(board, piece, row, col);
 };
 
 
@@ -266,7 +387,7 @@ const isSquareAttacked = (
       const piece = board[r][c];
 
       if (piece && piece.color === byColor) {
-        const moves = getValidMoves(board, piece, r, c);
+        const moves = getAttackMoves(board, piece, r, c);
 
         if (moves.some(([mr, mc]) => mr === row && mc === col)) {
           return true;
@@ -294,14 +415,32 @@ export const getLegalMoves = (
   board: Board,
   piece: Piece,
   row: number,
-  col: number
+  col: number,
+  hasMoved?: HasMovedState,
+  lastMove?: LastMove | null
 ): [number, number][] => {
-  const rawMoves = getValidMoves(board, piece, row, col);
+  const rawMoves = getValidMoves(board, piece, row, col, hasMoved, lastMove);
 
   const legalMoves: [number, number][] = [];
 
   for (let [r, c] of rawMoves) {
     const newBoard = board.map((rowArr) => [...rowArr]);
+
+    if (piece.type === "pawn" && c !== col && newBoard[r][c] === null) {
+      // en passant capture removes the adjacent pawn, not the destination square
+      newBoard[row][c] = null;
+    }
+
+    if (piece.type === "king" && Math.abs(c - col) === 2) {
+      // castling also moves the corresponding rook
+      if (c === 6) {
+        newBoard[row][5] = newBoard[row][7];
+        newBoard[row][7] = null;
+      } else if (c === 2) {
+        newBoard[row][3] = newBoard[row][0];
+        newBoard[row][0] = null;
+      }
+    }
 
     // simulate move
     newBoard[r][c] = piece;
@@ -314,4 +453,42 @@ export const getLegalMoves = (
   }
 
   return legalMoves;
+};
+
+const hasAnyLegalMoves = (
+  board: Board,
+  color: Color,
+  hasMoved?: HasMovedState,
+  lastMove?: LastMove | null
+): boolean => {
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = board[r][c];
+      if (!piece || piece.color !== color) continue;
+
+      const legalMoves = getLegalMoves(board, piece, r, c, hasMoved, lastMove);
+      if (legalMoves.length > 0) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+export const isCheckmate = (
+  board: Board,
+  color: Color,
+  hasMoved?: HasMovedState,
+  lastMove?: LastMove | null
+): boolean => {
+  return isKingInCheck(board, color) && !hasAnyLegalMoves(board, color, hasMoved, lastMove);
+};
+
+export const isStalemate = (
+  board: Board,
+  color: Color,
+  hasMoved?: HasMovedState,
+  lastMove?: LastMove | null
+): boolean => {
+  return !isKingInCheck(board, color) && !hasAnyLegalMoves(board, color, hasMoved, lastMove);
 };

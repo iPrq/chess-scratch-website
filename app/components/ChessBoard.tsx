@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { JSX } from "react";
-import { getLegalMoves, isKingInCheck } from "../../lib/chessLogic";
+import {
+  getLegalMoves,
+  isKingInCheck,
+  isCheckmate,
+  isStalemate,
+  type HasMovedState,
+  type LastMove,
+} from "../../lib/chessLogic";
 
 type PieceType = "pawn" | "rook" | "knight" | "bishop" | "queen" | "king";
 type Color = "white" | "black";
@@ -75,15 +82,27 @@ export default function ChessBoard(): JSX.Element {
   const [turn, setTurn] = useState<"white" | "black">("white");
   const whiteInCheck = isKingInCheck(board, "white");
   const blackInCheck = isKingInCheck(board, "black");
+  const [hasMoved, setHasMoved] = useState<HasMovedState>({
+    whiteKing : false,
+    blackKing : false,
+    whiteRookLeft : false,
+    whiteRookRight : false,
+    blackRookLeft : false,
+    blackRookRight : false,
+  });
+  const [lastMove, setLastMove] = useState<LastMove | null>(null);
+  
 
   const handleClick = (row: number, col: number) => {
+    if (gameOver) return;
+
     const clickedSquare = board[row][col];
 
     if (!selected) {
       if (clickedSquare && clickedSquare.color === turn) {
         setSelected([row, col]);
 
-        const moves = getLegalMoves(board, clickedSquare, row, col);
+        const moves = getLegalMoves(board, clickedSquare, row, col, hasMoved, lastMove);
         setValidMoves(moves);
       }
       return;
@@ -101,7 +120,7 @@ export default function ChessBoard(): JSX.Element {
     if (clickedSquare && clickedSquare.color === turn) {
       setSelected([row, col]);
 
-      const moves = getLegalMoves(board, clickedSquare, row, col);
+      const moves = getLegalMoves(board, clickedSquare, row, col, hasMoved, lastMove);
       setValidMoves(moves);
       return;
     }
@@ -118,8 +137,61 @@ export default function ChessBoard(): JSX.Element {
 
     const newBoard = board.map((r) => [...r]);
 
+    const isEnPassantCapture =
+      selectedPiece.type === "pawn" &&
+      fromCol !== col &&
+      clickedSquare === null;
+
+    if (isEnPassantCapture) {
+      newBoard[fromRow][col] = null;
+    }
+
+    const isCastlingMove =
+      selectedPiece.type === "king" && Math.abs(col - fromCol) === 2;
+
+    if (isCastlingMove) {
+      if (col === 6) {
+        newBoard[row][5] = newBoard[row][7];
+        newBoard[row][7] = null;
+      } else if (col === 2) {
+        newBoard[row][3] = newBoard[row][0];
+        newBoard[row][0] = null;
+      }
+    }
+
     newBoard[row][col] = selectedPiece;
     newBoard[fromRow][fromCol] = null;
+
+    setHasMoved((prev) => {
+      const next = { ...prev };
+
+      if (selectedPiece.type === "king") {
+        if (selectedPiece.color === "white") {
+          next.whiteKing = true;
+        } else {
+          next.blackKing = true;
+        }
+      }
+
+      if (selectedPiece.type === "rook") {
+        if (selectedPiece.color === "white" && fromRow === 7 && fromCol === 0) {
+          next.whiteRookLeft = true;
+        }
+        if (selectedPiece.color === "white" && fromRow === 7 && fromCol === 7) {
+          next.whiteRookRight = true;
+        }
+        if (selectedPiece.color === "black" && fromRow === 0 && fromCol === 0) {
+          next.blackRookLeft = true;
+        }
+        if (selectedPiece.color === "black" && fromRow === 0 && fromCol === 7) {
+          next.blackRookRight = true;
+        }
+      }
+
+      return next;
+    });
+
+    setLastMove({ from: [fromRow, fromCol], to: [row, col] });
 
     setBoard(newBoard);
     setSelected(null);
@@ -135,9 +207,25 @@ export default function ChessBoard(): JSX.Element {
     );
   };
 
+  const currentPlayerCheckmated = isCheckmate(board, turn, hasMoved, lastMove);
+  const currentPlayerStalemated = isStalemate(board, turn, hasMoved, lastMove);
+  const gameOver = currentPlayerCheckmated || currentPlayerStalemated;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-      {(whiteInCheck || blackInCheck) && (
+      {currentPlayerCheckmated && (
+        <div style={{ backgroundColor: "#ffe1e1", color: "#8b0000", border: "1px solid #ff8a8a", padding: "8px 10px", width: "480px", fontWeight: 700 }}>
+          Checkmate! {turn === "white" ? "Black" : "White"} wins.
+        </div>
+      )}
+
+      {currentPlayerStalemated && (
+        <div style={{ backgroundColor: "#eef2ff", color: "#1f2a44", border: "1px solid #b8c4ff", padding: "8px 10px", width: "480px", fontWeight: 700 }}>
+          Stalemate! Draw.
+        </div>
+      )}
+
+      {!currentPlayerCheckmated && !currentPlayerStalemated && (whiteInCheck || blackInCheck) && (
         <div
           style={{
             backgroundColor: "#ffe1e1",
@@ -224,6 +312,19 @@ export default function ChessBoard(): JSX.Element {
             );
           })
         )}
+      </div>
+
+      <div style={{
+        backgroundColor: gameOver ? "red" : "white",
+        color: gameOver ? "white" : "black",
+        border: gameOver ? "1px solid red" : "1px solid black",
+        padding: "8px 10px",
+        width: "480px",
+        fontWeight: 600,
+      }}
+      >
+        {gameOver && "Game Over!"}
+        {!gameOver && "Game in progress... "}
       </div>
     </div>
   );
