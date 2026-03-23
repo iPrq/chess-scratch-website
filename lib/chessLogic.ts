@@ -20,8 +20,68 @@ export type LastMove = {
   to: [number, number];
 };
 
+export type GameStatus = {
+  whiteInCheck: boolean;
+  blackInCheck: boolean;
+  currentPlayerCheckmated: boolean;
+  currentPlayerStalemated: boolean;
+  gameOver: boolean;
+  winner: Color | null;
+};
+
+export type GameState = {
+  board: Board;
+  turn: Color;
+  selected: [number, number] | null;
+  validMoves: [number, number][];
+  hasMoved: HasMovedState;
+  lastMove: LastMove | null;
+  status: GameStatus;
+};
+
 export type Square = Piece | null;
 export type Board = Square[][];
+
+const createPawnRow = (color: Color): Piece[] =>
+  Array.from({ length: 8 }, () => ({ type: "pawn", color }));
+
+export const createInitialBoard = (): Board => [
+  [
+    { type: "rook", color: "black" },
+    { type: "knight", color: "black" },
+    { type: "bishop", color: "black" },
+    { type: "queen", color: "black" },
+    { type: "king", color: "black" },
+    { type: "bishop", color: "black" },
+    { type: "knight", color: "black" },
+    { type: "rook", color: "black" },
+  ],
+  createPawnRow("black"),
+  Array.from({ length: 8 }, () => null),
+  Array.from({ length: 8 }, () => null),
+  Array.from({ length: 8 }, () => null),
+  Array.from({ length: 8 }, () => null),
+  createPawnRow("white"),
+  [
+    { type: "rook", color: "white" },
+    { type: "knight", color: "white" },
+    { type: "bishop", color: "white" },
+    { type: "queen", color: "white" },
+    { type: "king", color: "white" },
+    { type: "bishop", color: "white" },
+    { type: "knight", color: "white" },
+    { type: "rook", color: "white" },
+  ],
+];
+
+export const createInitialHasMoved = (): HasMovedState => ({
+  whiteKing: false,
+  blackKing: false,
+  whiteRookLeft: false,
+  whiteRookRight: false,
+  blackRookLeft: false,
+  blackRookRight: false,
+});
 
 // MAIN FUNCTION (dispatcher)
 
@@ -491,4 +551,174 @@ export const isStalemate = (
   lastMove?: LastMove | null
 ): boolean => {
   return !isKingInCheck(board, color) && !hasAnyLegalMoves(board, color, hasMoved, lastMove);
+};
+
+const getStatusForTurn = (
+  board: Board,
+  turn: Color,
+  hasMoved: HasMovedState,
+  lastMove: LastMove | null
+): GameStatus => {
+  const whiteInCheck = isKingInCheck(board, "white");
+  const blackInCheck = isKingInCheck(board, "black");
+  const currentPlayerCheckmated = isCheckmate(board, turn, hasMoved, lastMove);
+  const currentPlayerStalemated = isStalemate(board, turn, hasMoved, lastMove);
+  const gameOver = currentPlayerCheckmated || currentPlayerStalemated;
+  const winner = currentPlayerCheckmated
+    ? (turn === "white" ? "black" : "white")
+    : null;
+
+  return {
+    whiteInCheck,
+    blackInCheck,
+    currentPlayerCheckmated,
+    currentPlayerStalemated,
+    gameOver,
+    winner,
+  };
+};
+
+const cloneBoard = (board: Board): Board => board.map((r) => [...r]);
+
+const updateHasMovedAfterMove = (
+  hasMoved: HasMovedState,
+  piece: Piece,
+  fromRow: number,
+  fromCol: number,
+  toCol: number
+): HasMovedState => {
+  const next = { ...hasMoved };
+
+  if (piece.type === "king") {
+    if (piece.color === "white") {
+      next.whiteKing = true;
+      if (Math.abs(toCol - fromCol) === 2) {
+        if (toCol === 6) next.whiteRookRight = true;
+        if (toCol === 2) next.whiteRookLeft = true;
+      }
+    } else {
+      next.blackKing = true;
+      if (Math.abs(toCol - fromCol) === 2) {
+        if (toCol === 6) next.blackRookRight = true;
+        if (toCol === 2) next.blackRookLeft = true;
+      }
+    }
+  }
+
+  if (piece.type === "rook") {
+    if (piece.color === "white" && fromRow === 7 && fromCol === 0) next.whiteRookLeft = true;
+    if (piece.color === "white" && fromRow === 7 && fromCol === 7) next.whiteRookRight = true;
+    if (piece.color === "black" && fromRow === 0 && fromCol === 0) next.blackRookLeft = true;
+    if (piece.color === "black" && fromRow === 0 && fromCol === 7) next.blackRookRight = true;
+  }
+
+  return next;
+};
+
+export const createInitialGameState = (): GameState => {
+  const board = createInitialBoard();
+  const turn: Color = "white";
+  const hasMoved = createInitialHasMoved();
+  const lastMove: LastMove | null = null;
+
+  return {
+    board,
+    turn,
+    selected: null,
+    validMoves: [],
+    hasMoved,
+    lastMove,
+    status: getStatusForTurn(board, turn, hasMoved, lastMove),
+  };
+};
+
+export const handleSquareClick = (
+  state: GameState,
+  row: number,
+  col: number
+): GameState => {
+  if (state.status.gameOver) return state;
+
+  const { board, turn, selected, hasMoved, lastMove } = state;
+  const clickedSquare = board[row][col];
+
+  if (!selected) {
+    if (clickedSquare && clickedSquare.color === turn) {
+      return {
+        ...state,
+        selected: [row, col],
+        validMoves: getLegalMoves(board, clickedSquare, row, col, hasMoved, lastMove),
+      };
+    }
+    return state;
+  }
+
+  const [fromRow, fromCol] = selected;
+  const selectedPiece = board[fromRow][fromCol];
+
+  if (!selectedPiece) {
+    return {
+      ...state,
+      selected: null,
+      validMoves: [],
+    };
+  }
+
+  if (clickedSquare && clickedSquare.color === turn) {
+    return {
+      ...state,
+      selected: [row, col],
+      validMoves: getLegalMoves(board, clickedSquare, row, col, hasMoved, lastMove),
+    };
+  }
+
+  const isMoveValid = state.validMoves.some(([r, c]) => r === row && c === col);
+  if (!isMoveValid) return state;
+
+  const newBoard = cloneBoard(board);
+
+  const isEnPassantCapture =
+    selectedPiece.type === "pawn" &&
+    fromCol !== col &&
+    clickedSquare === null;
+
+  if (isEnPassantCapture) {
+    newBoard[fromRow][col] = null;
+  }
+
+  const isCastlingMove =
+    selectedPiece.type === "king" && Math.abs(col - fromCol) === 2;
+
+  if (isCastlingMove) {
+    if (col === 6) {
+      newBoard[row][5] = newBoard[row][7];
+      newBoard[row][7] = null;
+    } else if (col === 2) {
+      newBoard[row][3] = newBoard[row][0];
+      newBoard[row][0] = null;
+    }
+  }
+
+  newBoard[row][col] = selectedPiece;
+  newBoard[fromRow][fromCol] = null;
+
+  const nextHasMoved = updateHasMovedAfterMove(
+    hasMoved,
+    selectedPiece,
+    fromRow,
+    fromCol,
+    col
+  );
+  const nextLastMove: LastMove = { from: [fromRow, fromCol], to: [row, col] };
+  const nextTurn: Color = turn === "white" ? "black" : "white";
+
+  return {
+    board: newBoard,
+    selected: null,
+    validMoves: [],
+    turn: nextTurn,
+    hasMoved: nextHasMoved,
+    lastMove: nextLastMove,
+    status: getStatusForTurn(newBoard, nextTurn, nextHasMoved, nextLastMove),
+  };
 };
