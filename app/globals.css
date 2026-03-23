@@ -1,23 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-manrope: "Manrope", sans-serif;
+  --font-inter: "Inter", sans-serif;
+
+  --color-chess-green: #2d5a27;
+  --color-chess-dark: #154212;
+  --color-chess-light: #e4e4cc;
+  --color-chess-bg: #f8faf4;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    font-family: var(--font-inter);
+    background-color: var(--color-chess-bg);
+    color: #0f172a;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-manrope);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .bg-chess-bg {
+    background-color: var(--color-chess-bg);
+  }
+
+  .bg-chess-green {
+    background-color: var(--color-chess-green);
+  }
+
+  .bg-chess-dark {
+    background-color: var(--color-chess-dark);
+  }
+
+  .bg-chess-light {
+    background-color: var(--color-chess-light);
+  }
+
+  .text-chess-green {
+    color: var(--color-chess-green);
+  }
+
+  .text-chess-light {
+    color: var(--color-chess-light);
+  }
+
+  .bg-chess-green-10 {
+    background-color: color-mix(in srgb, var(--color-chess-green) 10%, transparent);
+  }
+
+  .bg-chess-green-5 {
+    background-color: color-mix(in srgb, var(--color-chess-green) 5%, transparent);
+  }
+
+  .border-chess-green-20 {
+    border-color: color-mix(in srgb, var(--color-chess-green) 20%, transparent);
+  }
+
+  .hover\:bg-chess-green-5:hover {
+    background-color: color-mix(in srgb, var(--color-chess-green) 5%, transparent);
+  }
+
+  .hover\:border-chess-green-40:hover {
+    border-color: color-mix(in srgb, var(--color-chess-green) 40%, transparent);
+  }
+
+  .shadow-chess-green-20 {
+    box-shadow:
+      0 20px 25px -5px color-mix(in srgb, var(--color-chess-green) 20%, transparent),
+      0 8px 10px -6px color-mix(in srgb, var(--color-chess-green) 20%, transparent);
+  }
+}
+
+.bg-signature-gradient {
+  background: linear-gradient(135deg, #154212 0%, #2d5a27 100%);
+}
+
+.chess-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
 }
