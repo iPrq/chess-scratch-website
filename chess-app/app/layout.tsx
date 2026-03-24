@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Checkmate",
   description: "Modern Chess, Reimagined",
+  icons: {
+    icon: "/pieces/bP.svg",
+  },
 };
 
 export default function RootLayout({
