@@ -16,7 +16,7 @@ import ChessBoard from "./components/ChessBoard";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 
-const Hero = ({ onSelectRival }: { onSelectRival: () => void }) => (
+const Hero = ({ onPlayNow, onSelectRival }: { onPlayNow: () => void; onSelectRival: () => void }) => (
   <section className="relative pt-24 pb-32 px-6 text-center max-w-7xl mx-auto">
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -53,7 +53,7 @@ const Hero = ({ onSelectRival }: { onSelectRival: () => void }) => (
       className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4"
     >
       <button
-        onClick={onSelectRival}
+        onClick={onPlayNow}
         className="w-full sm:w-auto bg-signature-gradient text-white px-10 py-4 rounded-xl text-lg font-bold shadow-xl shadow-chess-green-20 hover:scale-105 transition-transform"
       >
         Play Now
@@ -240,7 +240,7 @@ const Process = () => (
   </section>
 );
 
-const CTA = ({ onPlay }: { onPlay: () => void }) => (
+const CTA = ({ onPlayNow, onSelectRival }: { onPlayNow: () => void; onSelectRival: () => void }) => (
   <section className="py-32 px-6 text-center max-w-4xl mx-auto">
     <h2 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-slate-900 mb-8 leading-none">
       Ready to make your move?
@@ -250,13 +250,13 @@ const CTA = ({ onPlay }: { onPlay: () => void }) => (
     </p>
     <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
       <button
-        onClick={onPlay}
+        onClick={onPlayNow}
         className="w-full sm:w-auto bg-signature-gradient text-white px-12 py-5 rounded-2xl text-xl font-bold shadow-2xl shadow-chess-green-20 hover:scale-105 transition-transform"
       >
         Start Playing
       </button>
       <button
-        onClick={onPlay}
+        onClick={onSelectRival}
         className="w-full sm:w-auto bg-slate-100 text-slate-900 px-12 py-5 rounded-2xl text-xl font-bold hover:bg-slate-200 transition-colors"
       >
         Challenge a Friend
@@ -282,11 +282,11 @@ export default function Home() {
     return (
       <>
         <Navbar onNavigate={handleNavigate} />
-        <Hero onSelectRival={goToRivalSelection} />
+        <Hero onPlayNow={goToRivalSelection} onSelectRival={goToRivalSelection} />
         <Showcase />
         <Features />
         <Process />
-        <CTA onPlay={goToRivalSelection} />
+        <CTA onPlayNow={goToRivalSelection} onSelectRival={goToRivalSelection} />
         <Footer />
       </>
     );
@@ -295,7 +295,11 @@ export default function Home() {
   return (
     <>
       <Navbar onNavigate={handleNavigate} />
-      <ChessBoard />
+      <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-10">
+        <div className="flex justify-center">
+          <ChessBoard />
+        </div>
+      </main>
       <Footer />
     </>
   );
