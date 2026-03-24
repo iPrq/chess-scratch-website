@@ -17,6 +17,7 @@ interface RivalSelectionProps {
 
 export const RivalSelection = ({ onBack, onSelectOpponent }: RivalSelectionProps) => {
 	const [difficulty, setDifficulty] = useState(1);
+	const [isLoadingFriend, setIsLoadingFriend] = useState(false);
 
 	const handlePlayEngine = () => {
 		onSelectOpponent({
@@ -27,13 +28,20 @@ export const RivalSelection = ({ onBack, onSelectOpponent }: RivalSelectionProps
 		});
 	};
 
-	const handlePlayFriend = () => {
-		onSelectOpponent({
-			name: "Friend",
-			elo: 1500,
-			avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBKNzbGbQEV16h2HeJJYFvuAv5FAW8IKUURz-4kEU0iy_XibTQCt1WC-cUy_7oeLKWHItyJusWf6yL5l1MvMyK-wqQdj9UJ_-6RqD-Zg6Zk1f539g8gLSF_Uz1kiFh6xXQU3pDajF75R79Ax_a7MN3RqR0HYmjfusKgI6-lvEUstsHqja2HGHb1Fth8cF0YSKWtHDVOvUtILCTgT79SijVbIUZHG6PcCGchTHPcwRxGrCvNNNVJd1Dvg8s7UjnsRPMdPG1qobmWleDf",
-			isBot: false,
-		});
+	const handlePlayFriend = async () => {
+		setIsLoadingFriend(true);
+		try {
+			const res = await fetch("http://localhost:8080/api/games", { method: "POST" });
+			const data = await res.json();
+			if (data.gameId) {
+				window.location.href = `/join/${data.gameId}`;
+			}
+		} catch (e) {
+			console.error(e);
+			alert("Failed to connect to backend server");
+		} finally {
+			setIsLoadingFriend(false);
+		}
 	};
 
 	return (
@@ -118,28 +126,19 @@ export const RivalSelection = ({ onBack, onSelectOpponent }: RivalSelectionProps
 						</div>
 
 						<div className="mt-auto relative z-10">
-							<label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-6">Invite Link</label>
-							<div className="flex items-center gap-2 p-2 bg-white rounded-2xl border border-slate-200">
-								<input
-									className="bg-transparent border-none focus:ring-0 text-slate-900 text-sm flex-1 pl-4 font-medium"
-									readOnly
-									type="text"
-									value="checkmate.io/play/x7y2z"
-								/>
-								<button className="flex items-center gap-2 px-5 py-3 bg-slate-100 text-chess-dark font-bold text-xs rounded-xl hover:bg-slate-200 transition-colors active:scale-95">
-									<Copy className="w-4 h-4" />
-									<span>Copy</span>
-								</button>
+							<div className="mb-6">
+								<h3 className="font-bold text-slate-900 mb-2">Create a Private Lobby</h3>
+								<p className="text-sm text-slate-500">Generate a unique invite link to send to a friend. The game begins when they join.</p>
 							</div>
-							<p className="mt-4 text-[11px] text-slate-400 italic">Link expires in 24 hours or after first move.</p>
 
-							<div className="mt-10">
+							<div className="mt-6">
 								<button
 									onClick={handlePlayFriend}
-									className="w-full flex items-center justify-center gap-3 border-2 border-chess-green-20 text-chess-green font-bold py-5 rounded-2xl transition-all hover:bg-chess-green-5 active:scale-95"
+									disabled={isLoadingFriend}
+									className="w-full flex items-center justify-center gap-3 border-hidden bg-signature-gradient text-white shadow-xl shadow-chess-green-20 font-bold py-5 rounded-2xl transition-all hover:opacity-95 active:scale-95 disabled:opacity-50"
 								>
 									<UserPlus className="w-5 h-5" />
-									<span>Invite From Contact List</span>
+									<span>{isLoadingFriend ? "Generating Link..." : "Create Invite Link"}</span>
 								</button>
 							</div>
 						</div>

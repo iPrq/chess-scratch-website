@@ -11,6 +11,9 @@ public class Game {
     private HasMovedState hasMoved;
     private LastMove lastMove;
     private GameStatus status;
+    private List<Move> moveHistory = new ArrayList<>();
+    private List<ChatMessage> chatMessages = new ArrayList<>();
+    private List<Move> currentLegalMoves = new ArrayList<>();
 
     public Game(String gameId) {
         this.gameId = gameId;
@@ -55,4 +58,13 @@ public class Game {
 
     public GameStatus getStatus() { return status; }
     public void setStatus(GameStatus status) { this.status = status; }
+
+    public List<Move> getMoveHistory() { return moveHistory; }
+    public void setMoveHistory(List<Move> moveHistory) { this.moveHistory = moveHistory; }
+
+    public List<ChatMessage> getChatMessages() { return chatMessages; }
+    public void setChatMessages(List<ChatMessage> chatMessages) { this.chatMessages = chatMessages; }
+
+    public List<Move> getCurrentLegalMoves() { return currentLegalMoves; }
+    public void setCurrentLegalMoves(List<Move> currentLegalMoves) { this.currentLegalMoves = currentLegalMoves; }
 }

@@ -2,19 +2,10 @@
 
 import { useState } from "react";
 import { motion } from "motion/react";
-import {
-  Bolt,
-  Cpu,
-  Lightbulb,
-  Timer,
-  MessageSquare,
-  BarChart3,
-  Clock,
-  LayoutDashboard,
-} from "lucide-react";
-import ChessBoard from "./components/ChessBoard";
+import { Bolt, Cpu, Lightbulb, Timer, MessageSquare, BarChart3, Clock, LayoutDashboard } from "lucide-react";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
+import { useRouter } from "next/navigation";
 
 const Hero = ({ onPlayNow, onSelectRival }: { onPlayNow: () => void; onSelectRival: () => void }) => (
   <section className="relative pt-24 pb-32 px-6 text-center max-w-7xl mx-auto">
@@ -266,40 +257,33 @@ const CTA = ({ onPlayNow, onSelectRival }: { onPlayNow: () => void; onSelectRiva
 );
 
 export default function Home() {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const router = useRouter();
+  const [isCreatingGame, setIsCreatingGame] = useState(false);
 
-  const goToRivalSelection = () => {
-    window.location.href = "/selection";
-  };
-
-  const handleNavigate = (view: string) => {
-    if (view === "landing") {
-      setIsPlaying(false);
+  const handlePlayOnline = async () => {
+    setIsCreatingGame(true);
+    try {
+      const res = await fetch("http://localhost:8080/api/games", { method: "POST" });
+      const data = await res.json();
+      if (data.gameId) {
+        router.push(`/join/${data.gameId}`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to connect to backend server");
+    } finally {
+      setIsCreatingGame(false);
     }
   };
 
-  if (!isPlaying) {
-    return (
-      <>
-        <Navbar onNavigate={handleNavigate} />
-        <Hero onPlayNow={goToRivalSelection} onSelectRival={goToRivalSelection} />
-        <Showcase />
-        <Features />
-        <Process />
-        <CTA onPlayNow={goToRivalSelection} onSelectRival={goToRivalSelection} />
-        <Footer />
-      </>
-    );
-  }
-
   return (
     <>
-      <Navbar onNavigate={handleNavigate} />
-      <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-10">
-        <div className="flex justify-center">
-          <ChessBoard />
-        </div>
-      </main>
+      <Navbar onNavigate={() => {}} />
+      <Hero onPlayNow={handlePlayOnline} onSelectRival={handlePlayOnline} />
+      <Showcase />
+      <Features />
+      <Process />
+      <CTA onPlayNow={handlePlayOnline} onSelectRival={handlePlayOnline} />
       <Footer />
     </>
   );

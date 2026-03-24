@@ -61,11 +61,32 @@ public class ChessLogicService {
 
         game.setHasMoved(updateHasMovedAfterMove(game.getHasMoved(), piece, fromRow, fromCol, toCol));
         game.setLastMove(new LastMove(fromRow, fromCol, toRow, toCol));
+        game.getMoveHistory().add(move);
         game.switchTurn();
 
         updateGameStatus(game);
+        updateCurrentLegalMoves(game);
 
         return true;
+    }
+
+    public void updateCurrentLegalMoves(Game game) {
+        List<Move> currentLegalMoves = new ArrayList<>();
+        if (!game.getStatus().isGameOver()) {
+            Piece[][] board = game.getBoard();
+            for (int r = 0; r < 8; r++) {
+                for (int c = 0; c < 8; c++) {
+                    Piece piece = board[r][c];
+                    if (piece != null && piece.getColor() == game.getTurn()) {
+                        List<int[]> moves = getLegalMoves(board, piece, r, c, game.getHasMoved(), game.getLastMove());
+                        for (int[] m : moves) {
+                            currentLegalMoves.add(new Move(game.getGameId(), r, c, m[0], m[1]));
+                        }
+                    }
+                }
+            }
+        }
+        game.setCurrentLegalMoves(currentLegalMoves);
     }
 
     private void updateGameStatus(Game game) {

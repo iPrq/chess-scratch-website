@@ -10,8 +10,11 @@ public class GameService {
 
     private final ConcurrentHashMap<String, Game> games = new ConcurrentHashMap<>();
 
-    public Game getOrCreateGame(String gameId) {
-        return games.computeIfAbsent(gameId, Game::new);
+    public Game createGame() {
+        String shortId = java.util.UUID.randomUUID().toString().substring(0, 8);
+        Game game = new Game(shortId);
+        games.put(shortId, game);
+        return game;
     }
 
     public Game getGame(String gameId) {
