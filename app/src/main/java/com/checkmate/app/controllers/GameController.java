@@ -2,7 +2,7 @@ package com.checkmate.app.controllers;
 
 import com.checkmate.app.model.Game;
 import com.checkmate.app.model.Move;
-import com.checkmate.app.model.Piece;
+import com.checkmate.app.services.ChessLogicService;
 import com.checkmate.app.services.GameService;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.Header;
@@ -15,10 +15,12 @@ import org.springframework.stereotype.Controller;
 public class GameController {
 
     private final GameService gameService;
+    private final ChessLogicService chessLogicService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public GameController(GameService gameService, SimpMessagingTemplate messagingTemplate) {
+    public GameController(GameService gameService, ChessLogicService chessLogicService, SimpMessagingTemplate messagingTemplate) {
         this.gameService = gameService;
+        this.chessLogicService = chessLogicService;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -48,6 +50,7 @@ public class GameController {
                 color
         );
     }
+
     @MessageMapping("/move")
     public void move(@Payload Move move) {
 
@@ -55,22 +58,13 @@ public class GameController {
 
         if (game == null) return;
 
-        applyMove(game, move);
-        
-        messagingTemplate.convertAndSend(
-                "/topic/game/" + move.getGameid(),
-                game
-        );
-    }
+        boolean success = chessLogicService.applyMove(game, move);
 
-    private void applyMove(Game game, Move move) {
-        Piece[][] board = game.getBoard();
-
-        Piece piece = board[move.getFromRow()][move.getFromCol()];
-
-        board[move.getToRow()][move.getToCol()] = piece;
-        board[move.getFromRow()][move.getFromCol()] = null;
-
-        game.switchTurn();
+        if (success) {
+            messagingTemplate.convertAndSend(
+                    "/topic/game/" + move.getGameid(),
+                    game
+            );
+        }
     }
 }

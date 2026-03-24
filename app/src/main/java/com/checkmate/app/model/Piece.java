@@ -4,7 +4,7 @@ public class Piece {
     private PieceType type;
     private Color color;
 
-    public Piece(PieceType Type, Color color) {
+    public Piece(PieceType type, Color color) {
         this.color = color;
         this.type = type;
     }
