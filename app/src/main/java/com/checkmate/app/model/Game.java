@@ -1,6 +1,7 @@
 package com.checkmate.app.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class Game {
@@ -37,5 +38,13 @@ public class Game {
 
     public void switchTurn() {
         turn = (turn == Color.WHITE) ? Color.BLACK : Color.WHITE;
+    }
+
+    public List<String> getPlayers() {
+        return players;
+    }
+
+    public Piece[][] getBoard() {
+        return board;
     }
 }

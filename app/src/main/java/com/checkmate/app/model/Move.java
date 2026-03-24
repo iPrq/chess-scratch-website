@@ -59,4 +59,6 @@ public class Move {
     public void setToCol(int toCol) {
         this.toCol = toCol;
     }
+
+
 }
