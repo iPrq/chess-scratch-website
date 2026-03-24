@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { JSX } from "react";
 import { useChessGame } from "../../lib/useChessGame";
 import { LayoutDashboard } from "lucide-react";
+import { getLegalMoves } from "../../lib/chessLogic";
 
 const getPieceImage = (piece: any): string => {
   const color = piece.color.toLowerCase() === "white" ? "w" : "b";
@@ -29,6 +30,24 @@ type ChessBoardProps = {
 export default function ChessBoard({ gameId, playerColor, backendGame, error, makeMove }: ChessBoardProps): JSX.Element {
   const [selected, setSelected] = useState<[number, number] | null>(null);
 
+  const normalizedBoard = useMemo(() => {
+    if (!backendGame?.board) return [];
+    return backendGame.board.map((rowArr: any[]) => 
+      rowArr.map((p: any) => 
+        p ? { ...p, type: p.type.toLowerCase(), color: p.color.toLowerCase() } : null
+      )
+    );
+  }, [backendGame]);
+
+  const localLegalMoves = useMemo(() => {
+    if (!selected || !normalizedBoard.length || !backendGame) return [];
+    const [r, c] = selected;
+    const piece = normalizedBoard[r]?.[c];
+    if (!piece) return [];
+    
+    return getLegalMoves(normalizedBoard, piece, r, c, backendGame.hasMoved || undefined, backendGame.lastMove || undefined);
+  }, [selected, normalizedBoard, backendGame]);
+
   if (error) {
     return (
       <div className="w-full flex items-center justify-center aspect-square bg-slate-50 border border-red-200 rounded-xl">
@@ -51,7 +70,9 @@ export default function ChessBoard({ gameId, playerColor, backendGame, error, ma
   const {
     board,
     turn,
-    status
+    status,
+    hasMoved,
+    lastMove
   } = backendGame;
 
   // Fallbacks if backend doesn't provide these keys in identical format
@@ -134,10 +155,7 @@ export default function ChessBoard({ gameId, playerColor, backendGame, error, ma
               ((piece.color.toLowerCase() === "white" && whiteInCheck) ||
                 (piece.color.toLowerCase() === "black" && blackInCheck));
 
-            const isLegalMove = selected && backendGame.currentLegalMoves?.some((m: any) => 
-               m.fromRow === selected[0] && m.fromCol === selected[1] &&
-               m.toRow === row && m.toCol === col
-            );
+            const isLegalMove = selected && localLegalMoves.some(([lr, lc]) => lr === row && lc === col);
 
             return (
               <div
@@ -159,7 +177,7 @@ export default function ChessBoard({ gameId, playerColor, backendGame, error, ma
                   />
                 )}
                 {isLegalMove && (
-                  <div className="absolute w-[25%] h-[25%] bg-chess-dark/30 rounded-full z-10 pointer-events-none" />
+                  <div className="absolute w-[25%] h-[25%] bg-black/40 rounded-full z-10 pointer-events-none" />
                 )}
               </div>
             );

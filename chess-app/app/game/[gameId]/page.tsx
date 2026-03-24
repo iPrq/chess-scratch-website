@@ -50,7 +50,6 @@ export default function GameRoom({ params }: { params: Promise<{ gameId: string 
                   <span className="font-bold text-[#191c19] text-lg">Anonymous</span>
                   <span className="bg-[#42493e]/10 px-2 py-0.5 rounded text-[10px] font-bold text-[#42493e] uppercase">{opponentColor}</span>
                 </div>
-                <span className="text-xs text-[#72796e] font-medium tracking-wide">ELO: 1542</span>
               </div>
             </div>
           </div>
@@ -72,8 +71,7 @@ export default function GameRoom({ params }: { params: Promise<{ gameId: string 
               </div>
               <div>
                 <span className="font-bold text-[#191c19] text-lg">Anonymous</span>
-                <div className="flex items-center gap-2">
-                  <div className="text-xs text-[#72796e] font-medium tracking-wide">ELO: 1520</div>
+                <div className="flex items-center gap-2 mt-1">
                   <span className="bg-[#154212]/10 px-2 py-0.5 rounded text-[10px] font-bold text-[#154212] uppercase">{playerColor || "Spectator"}</span>
                 </div>
               </div>
