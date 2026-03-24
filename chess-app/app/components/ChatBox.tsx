@@ -23,7 +23,7 @@ export default function ChatBox({ chatMessages, sendChatMessage, playerColor }: 
   };
 
   return (
-    <div className="flex flex-col h-[600px] w-full bg-[#f3f4ef] rounded-2xl overflow-hidden font-inter relative">
+    <div className="flex flex-col h-full min-h-[500px] w-full bg-[#f3f4ef] rounded-2xl overflow-hidden font-inter relative">
       <div className="absolute inset-0 pointer-events-none shadow-[inset_0_24px_50px_-12px_rgba(25,28,25,0.04)]" />
       <div className="p-8 pb-4 relative z-10">
         <h2 className="font-manrope text-[1.75rem] font-bold text-[#191c19] leading-tight tracking-tight">

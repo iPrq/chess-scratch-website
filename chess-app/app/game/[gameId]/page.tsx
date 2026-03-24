@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import { Flag, Handshake } from "lucide-react";
+import { Flag, Handshake, User } from "lucide-react";
 import { Navbar } from "../../components/Navbar";
 import { Footer } from "../../components/Footer";
 import ChessBoard from "../../components/ChessBoard";
@@ -20,10 +20,6 @@ export default function GameRoom({ params }: { params: Promise<{ gameId: string 
   const opponentColor = playerColor?.toLowerCase() === "white" ? "Black" : "White";
   const status = backendGame?.status;
 
-  // Derive evaluation for aesthetic purposes since Engine eval isn't on backend yet!
-  const evalNumber = backendGame?.turn === "WHITE" ? "+0.45" : "-0.15"; 
-  const evalColor = backendGame?.turn === "WHITE" ? "bg-[#154212]" : "bg-[#191c19]";
-
   return (
     <div className="bg-[#f8faf4] min-h-screen font-inter text-[#191c19] flex flex-col w-full">
       <Navbar onNavigate={(view) => {
@@ -33,20 +29,8 @@ export default function GameRoom({ params }: { params: Promise<{ gameId: string 
         }} />
         
       <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-8 md:py-12 grid grid-cols-12 gap-8 lg:gap-12">
-        {/* Left Column: Evaluation & Chat */}
-        <aside className="col-span-12 lg:col-span-3 flex flex-col gap-6">
-          <section className="bg-[#f3f4ef] rounded-2xl p-6 shadow-[0_2px_8px_rgba(25,28,25,0.04)] border border/transparent">
-            <h3 className="font-manrope font-bold text-lg mb-4 text-[#154212]">Engine Evaluation</h3>
-            <div className="flex items-center gap-4 mb-4">
-              <span className="text-3xl font-black tracking-tighter text-[#191c19]">{evalNumber}</span>
-              <span className="text-xs uppercase tracking-widest text-[#72796e] font-bold">Analysis Running</span>
-            </div>
-            <div className="w-full h-2 bg-[#e1e3de] rounded-full overflow-hidden flex">
-              <div className={`h-full ${evalColor} transition-all duration-500 w-[55%]`} />
-              <div className="h-full bg-[#c2c9bb] flex-1" />
-            </div>
-          </section>
-
+        {/* Left Column: Chat */}
+        <aside className="col-span-12 lg:col-span-3 flex flex-col gap-6 h-full">
           <ChatBox 
             chatMessages={backendGame?.chatMessages || []} 
             sendChatMessage={sendChatMessage} 
@@ -58,12 +42,12 @@ export default function GameRoom({ params }: { params: Promise<{ gameId: string 
         <section className="col-span-12 lg:col-span-6 flex flex-col items-center gap-8">
           <div className="w-full flex justify-between items-center bg-[#f3f4ef] p-4 rounded-2xl shadow-[0_2px_8px_rgba(25,28,25,0.04)]">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-[#e1e3de] flex items-center justify-center overflow-hidden border border-[#c2c9bb]/30">
-                <img alt="Opponent" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3Yuk1r1sNMujX10nUWzb9aTyK9cNGPQBHd94XPVRVKiIzVtGFeRkKt8gIu6UOqmuZ5ORFfFhybMazTE8AwAsuembORvO2qRFXE7-0zOQaraA1Z0ivyMztoC-XGQcNdphST7soMvRCaQPDFddZQkB_Jg4ih18ZkcRal1VAyWOjgWm-bsENZvW6aaGMXNFvbN0w3Fx6ghyUHnoDwCHsXSOOkN4Xjax0RB-yzLCaiDQi4Eh1J7TAYHvboeTLfC_-XebmJl5XBFwfNawl" className="w-full h-full object-cover" />
+              <div className="w-12 h-12 rounded-xl bg-[#e1e3de] flex items-center justify-center overflow-hidden border border-[#c2c9bb]/30 text-[#72796e]">
+                <User className="w-6 h-6" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-[#191c19] text-lg">Anonymous Rival</span>
+                  <span className="font-bold text-[#191c19] text-lg">Anonymous</span>
                   <span className="bg-[#42493e]/10 px-2 py-0.5 rounded text-[10px] font-bold text-[#42493e] uppercase">{opponentColor}</span>
                 </div>
                 <span className="text-xs text-[#72796e] font-medium tracking-wide">ELO: 1542</span>
@@ -83,11 +67,11 @@ export default function GameRoom({ params }: { params: Promise<{ gameId: string 
 
           <div className="w-full flex justify-between items-center bg-[#f3f4ef] p-4 rounded-2xl shadow-[0_2px_8px_rgba(25,28,25,0.04)]">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-[#e1e3de] overflow-hidden border border-[#c2c9bb]/30">
-                <img alt="You" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKNzbGbQEV16h2HeJJYFvuAv5FAW8IKUURz-4kEU0iy_XibTQCt1WC-cUy_7oeLKWHItyJusWf6yL5l1MvMyK-wqQdj9UJ_-6RqD-Zg6Zk1f539g8gLSF_Uz1kiFh6xXQU3pDajF75R79Ax_a7MN3RqR0HYmjfusKgI6-lvEUstsHqja2HGHb1Fth8cF0YSKWtHDVOvUtILCTgT79SijVbIUZHG6PcCGchTHPcwRxGrCvNNNVJd1Dvg8s7UjnsRPMdPG1qobmWleDf" className="w-full h-full object-cover" />
+              <div className="w-12 h-12 rounded-xl bg-[#e1e3de] flex items-center justify-center overflow-hidden border border-[#c2c9bb]/30 text-[#72796e]">
+                <User className="w-6 h-6" />
               </div>
               <div>
-                <span className="font-bold text-[#191c19] text-lg">You</span>
+                <span className="font-bold text-[#191c19] text-lg">Anonymous</span>
                 <div className="flex items-center gap-2">
                   <div className="text-xs text-[#72796e] font-medium tracking-wide">ELO: 1520</div>
                   <span className="bg-[#154212]/10 px-2 py-0.5 rounded text-[10px] font-bold text-[#154212] uppercase">{playerColor || "Spectator"}</span>
