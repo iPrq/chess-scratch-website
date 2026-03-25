@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { GameState, GameStatus, Color } from "./chessLogic"; // Re-using types if possible, or we will need to define them.
+import { backendUrl } from "./backend";
 
 export type Point = [number, number];
 
@@ -38,7 +39,7 @@ export function useChessGame(gameId: string | null) {
       }
     }
 
-    const socket = new SockJS("http://localhost:8080/ws");
+    const socket = new SockJS(backendUrl("/ws"));
     const client = new Client({
       webSocketFactory: () => socket,
       debug: function (str) {

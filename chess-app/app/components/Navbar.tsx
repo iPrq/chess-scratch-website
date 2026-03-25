@@ -11,11 +11,6 @@ export const Navbar = ({ onNavigate }: { onNavigate: (view: string) => void }) =
       <div className="hidden md:flex items-center space-x-8">
         <a href="/selection" className="text-sm font-semibold text-chess-dark border-b-2 border-chess-dark pb-1">Play</a>
         <a href="#" className="text-sm font-semibold text-slate-500 hover:text-chess-dark transition-colors">Learn</a>
-        <a href="#" className="text-sm font-semibold text-slate-500 hover:text-chess-dark transition-colors">Analysis</a>
-      </div>
-      <div className="flex items-center space-x-6">
-        <button className="text-sm font-semibold text-slate-600 hover:text-chess-dark transition-colors">Log In</button>
-        <button className="bg-signature-gradient text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-chess-green/20 hover:scale-105 transition-transform">Sign Up</button>
       </div>
     </div>
   </nav>

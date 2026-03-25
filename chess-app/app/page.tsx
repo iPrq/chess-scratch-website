@@ -6,6 +6,7 @@ import { Bolt, Cpu, Lightbulb, Timer, MessageSquare, BarChart3, Clock, LayoutDas
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { useRouter } from "next/navigation";
+import { backendUrl } from "@/lib/backend";
 
 const Hero = ({ onPlayNow, onSelectRival }: { onPlayNow: () => void; onSelectRival: () => void }) => (
   <section className="relative pt-24 pb-32 px-6 text-center max-w-7xl mx-auto">
@@ -263,7 +264,7 @@ export default function Home() {
   const handlePlayOnline = async () => {
     setIsCreatingGame(true);
     try {
-      const res = await fetch("http://localhost:8080/api/games", { method: "POST" });
+      const res = await fetch(backendUrl("/api/games"), { method: "POST" });
       const data = await res.json();
       if (data.gameId) {
         router.push(`/join/${data.gameId}`);

@@ -9,6 +9,7 @@ import {
 	ArrowLeft,
 } from "lucide-react";
 import { useState } from "react";
+import { backendUrl } from "@/lib/backend";
 
 interface RivalSelectionProps {
 	onBack: () => void;
@@ -31,7 +32,7 @@ export const RivalSelection = ({ onBack, onSelectOpponent }: RivalSelectionProps
 	const handlePlayFriend = async () => {
 		setIsLoadingFriend(true);
 		try {
-			const res = await fetch("http://localhost:8080/api/games", { method: "POST" });
+			const res = await fetch(backendUrl("/api/games"), { method: "POST" });
 			const data = await res.json();
 			if (data.gameId) {
 				window.location.href = `/join/${data.gameId}`;

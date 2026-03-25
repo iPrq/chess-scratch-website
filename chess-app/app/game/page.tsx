@@ -166,9 +166,9 @@ export default function GamePage() {
                   </div>
                 ))}
               </div>
-              <div className="relative">
+              <div className="flex items-center gap-2">
                 <input
-                  className="w-full bg-[#e1e3de] border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-[#154212]/20 transition-all outline-none"
+                  className="flex-1 bg-[#e1e3de] border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-[#154212]/20 transition-all outline-none"
                   placeholder="Type a message..."
                   type="text"
                   value={inputMessage}
@@ -177,7 +177,7 @@ export default function GamePage() {
                 />
                 <button
                   onClick={handleSendMessage}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[#154212] hover:scale-110 transition-transform"
+                  className="h-11 px-4 bg-[#154212] text-white rounded-xl hover:bg-[#2d5a27] transition-colors flex items-center justify-center"
                   aria-label="Send message"
                 >
                   <SendHorizontal className="w-4 h-4" />
