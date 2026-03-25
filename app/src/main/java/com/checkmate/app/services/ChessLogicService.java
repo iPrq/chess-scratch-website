@@ -59,6 +59,20 @@ public class ChessLogicService {
         board[toRow][toCol] = piece;
         board[fromRow][fromCol] = null;
 
+        // Apply pawn promotion
+        if (piece.getType() == PieceType.PAWN && (toRow == 0 || toRow == 7)) {
+            String promo = move.getPromotionPiece();
+            if (promo != null && !promo.isEmpty()) {
+                try {
+                    piece.setType(PieceType.valueOf(promo.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    piece.setType(PieceType.QUEEN);
+                }
+            } else {
+                piece.setType(PieceType.QUEEN);
+            }
+        }
+
         game.setHasMoved(updateHasMovedAfterMove(game.getHasMoved(), piece, fromRow, fromCol, toCol));
         game.setLastMove(new LastMove(fromRow, fromCol, toRow, toCol));
         game.getMoveHistory().add(move);

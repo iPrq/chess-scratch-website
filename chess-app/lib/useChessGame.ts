@@ -97,7 +97,7 @@ export function useChessGame(gameId: string | null) {
   }, [gameId]);
 
   const makeMove = useCallback(
-    (fromRow: number, fromCol: number, toRow: number, toCol: number) => {
+    (fromRow: number, fromCol: number, toRow: number, toCol: number, promotionPiece?: string) => {
       if (stompClient && stompClient.connected && gameId) {
         stompClient.publish({
           destination: "/app/move",
@@ -107,6 +107,7 @@ export function useChessGame(gameId: string | null) {
             fromCol,
             toRow,
             toCol,
+            promotionPiece,
           }),
         });
       }

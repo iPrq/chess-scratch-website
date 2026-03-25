@@ -11,8 +11,8 @@ export default function ChatBox({ chatMessages, sendChatMessage, playerColor }: 
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [chatMessages?.length]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();

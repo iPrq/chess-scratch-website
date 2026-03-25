@@ -9,6 +9,8 @@ public class Move {
     private int toRow;
     private int toCol;
 
+    private String promotionPiece;
+
     public Move() {
     }
 
@@ -60,5 +62,11 @@ public class Move {
         this.toCol = toCol;
     }
 
+    public String getPromotionPiece() {
+        return promotionPiece;
+    }
 
+    public void setPromotionPiece(String promotionPiece) {
+        this.promotionPiece = promotionPiece;
+    }
 }

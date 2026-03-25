@@ -24,11 +24,12 @@ type ChessBoardProps = {
   playerColor: string | null;
   backendGame: any;
   error: string | null;
-  makeMove: (fromRow: number, fromCol: number, toRow: number, toCol: number) => void;
+  makeMove: (fromRow: number, fromCol: number, toRow: number, toCol: number, promotionPiece?: string) => void;
 };
 
 export default function ChessBoard({ gameId, playerColor, backendGame, error, makeMove }: ChessBoardProps): JSX.Element {
   const [selected, setSelected] = useState<[number, number] | null>(null);
+  const [promotionPending, setPromotionPending] = useState<{ fromRow: number, fromCol: number, toRow: number, toCol: number } | null>(null);
 
   const normalizedBoard = useMemo(() => {
     if (!backendGame?.board) return [];
@@ -103,6 +104,13 @@ export default function ChessBoard({ gameId, playerColor, backendGame, error, ma
         setSelected(null);
       } else {
         // Attempt move
+        const piece = board[selected[0]][selected[1]];
+        if (piece && piece.type.toLowerCase() === "pawn" && (row === 0 || row === 7)) {
+          setPromotionPending({ fromRow: selected[0], fromCol: selected[1], toRow: row, toCol: col });
+          setSelected(null);
+          return;
+        }
+
         makeMove(selected[0], selected[1], row, col);
         setSelected(null);
       }
@@ -142,13 +150,18 @@ export default function ChessBoard({ gameId, playerColor, backendGame, error, ma
         </div>
       )}
 
-      <div className="grid w-full aspect-square grid-cols-8 overflow-hidden rounded-[4px] shadow-[0_24px_50px_-12px_rgba(25,28,25,0.06)] bg-[#f8faf4] border-4 border-[#154212]/5">
+      <div className="relative grid w-full aspect-square grid-cols-8 overflow-hidden rounded-[4px] shadow-[0_24px_50px_-12px_rgba(25,28,25,0.06)] bg-[#f8faf4] border-4 border-[#154212]/5">
         {board.map((rowArr: any[], row: number) =>
           rowArr.map((piece: any, col: number) => {
             const isDark = (row + col) % 2 === 1;
 
             const isSelected =
               selected?.[0] === row && selected?.[1] === col;
+            
+            const isLastMove = lastMove && lastMove.from && lastMove.to && (
+              (lastMove.from[0] === row && lastMove.from[1] === col) || 
+              (lastMove.to[0] === row && lastMove.to[1] === col)
+            );
 
             const isCheckedKing =
               piece?.type?.toLowerCase() === "king" &&
@@ -179,9 +192,39 @@ export default function ChessBoard({ gameId, playerColor, backendGame, error, ma
                 {isLegalMove && (
                   <div className="absolute w-[25%] h-[25%] bg-black/40 rounded-full z-10 pointer-events-none" />
                 )}
+                {isLastMove && !isSelected && (
+                  <div className="absolute inset-0 bg-[#eab308]/40 z-10 pointer-events-none" />
+                )}
               </div>
             );
           })
+        )}
+        
+        {promotionPending && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/50 rounded-[4px] backdrop-blur-sm">
+            <div className="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4">
+              <h3 className="text-xl font-bold text-slate-800">Choose Promotion</h3>
+              <div className="flex gap-4">
+                {["queen", "knight", "rook", "bishop"].map(p => (
+                  <div key={p} 
+                       className="cursor-pointer hover:bg-slate-100 bg-slate-50 border-2 border-slate-200 hover:border-chess-green p-3 rounded-xl transition-all"
+                       onClick={(e) => {
+                           e.stopPropagation();
+                           makeMove(promotionPending.fromRow, promotionPending.fromCol, promotionPending.toRow, promotionPending.toCol, p);
+                           setPromotionPending(null);
+                       }}>
+                    <img src={getPieceImage({ type: p, color: playerColor || "white" })} className="w-16 h-16 object-contain drop-shadow-sm" alt={p}/>
+                  </div>
+                ))}
+              </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setPromotionPending(null); }}
+                className="mt-2 text-sm text-slate-500 hover:text-slate-800 font-semibold"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
