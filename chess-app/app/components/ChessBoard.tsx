@@ -9,12 +9,12 @@ import { getLegalMoves } from "../../lib/chessLogic";
 const getPieceImage = (piece: any): string => {
   const color = piece.color.toLowerCase() === "white" ? "w" : "b";
   const typeMap: Record<string, string> = {
-    pawn: "p",
-    rook: "r",
-    knight: "n",
-    bishop: "b",
-    queen: "q",
-    king: "k",
+    pawn: "P",
+    rook: "R",
+    knight: "N",
+    bishop: "B",
+    queen: "Q",
+    king: "K",
   };
   return `/pieces/${color}${typeMap[piece.type.toLowerCase()]}.svg`;
 };

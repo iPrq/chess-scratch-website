@@ -5,7 +5,7 @@ export const Navbar = ({ onNavigate }: { onNavigate: (view: string) => void }) =
         className="text-2xl font-extrabold tracking-tighter text-chess-dark cursor-pointer flex items-center gap-2"
         onClick={() => onNavigate('landing')}
       >
-        <img src="/pieces/bp.svg" alt="Logo" className="w-8 h-8" />
+        <img src="/pieces/bP.svg" alt="Logo" className="w-8 h-8" />
         CHECKMATE
       </div>
       <div className="hidden md:flex items-center space-x-8">
