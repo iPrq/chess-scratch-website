@@ -12,7 +12,7 @@ import {
   ChevronRight,
   ChevronsRight,
 } from "lucide-react";
-import ChessBoard, { type ChessBoardUpdate } from "../components/ChessBoard";
+import ChessBoard from "../components/ChessBoard";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
 import type { GameStatus } from "../../lib/chessLogic";
@@ -75,8 +75,7 @@ export default function GamePage() {
   const [moveList, setMoveList] = useState<string[]>([]);
   const [turn, setTurn] = useState<"white" | "black">("white");
   const [status, setStatus] = useState<GameStatus>(initialStatus);
-  const [canUndo, setCanUndo] = useState(false);
-  const [undoSignal, setUndoSignal] = useState(0);
+  const canUndo = false;
 
   const moveHistory = useMemo(() => pairMoves(moveList), [moveList]);
 
@@ -102,13 +101,6 @@ export default function GamePage() {
       return Math.max(-4, Math.min(4, Number(nextEval.toFixed(2))));
     });
   }, [moveList.length]);
-
-  const handleGameUpdate = (update: ChessBoardUpdate) => {
-    setMoveList(update.moveList);
-    setTurn(update.turn);
-    setStatus(update.status);
-    setCanUndo(update.canUndo);
-  };
 
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
@@ -209,7 +201,13 @@ export default function GamePage() {
             </div>
 
             <div className="relative aspect-square w-full max-w-[600px] bg-[#e7e9e3] p-4 rounded-2xl shadow-2xl shadow-[#191c19]/10 border border-[#c2c9bb]/30">
-              <ChessBoard onGameUpdate={handleGameUpdate} undoSignal={undoSignal} />
+              <ChessBoard
+                gameId="local-game"
+                playerColor="WHITE"
+                backendGame={null}
+                error={null}
+                makeMove={() => {}}
+              />
             </div>
 
             <div className="w-full flex justify-between items-center bg-[#f3f4ef] p-4 rounded-2xl shadow-sm border border-[#c2c9bb]/20">
@@ -264,7 +262,6 @@ export default function GamePage() {
 
             <section className="grid grid-cols-1 gap-3">
               <button
-                onClick={() => setUndoSignal((prev) => prev + 1)}
                 disabled={!canUndo}
                 className="bg-[#f3f4ef] hover:bg-[#e7e9e3] disabled:opacity-50 text-[#191c19] font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-sm border border-[#c2c9bb]/20"
               >
