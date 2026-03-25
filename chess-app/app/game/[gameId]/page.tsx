@@ -30,7 +30,7 @@ export default function GameRoom({ params }: { params: Promise<{ gameId: string 
         
       <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 md:px-8 py-8 md:py-12 grid grid-cols-12 gap-8 lg:gap-12">
         {/* Left Column: Chat */}
-        <aside className="col-span-12 lg:col-span-3 flex flex-col gap-6 h-full">
+        <aside className="col-span-12 lg:col-span-3 flex flex-col gap-6 min-h-0">
           <ChatBox 
             chatMessages={backendGame?.chatMessages || []} 
             sendChatMessage={sendChatMessage} 
