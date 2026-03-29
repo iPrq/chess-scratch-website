@@ -3,24 +3,34 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --font-manrope: "Manrope", sans-serif;
-  --font-inter: "Inter", sans-serif;
+  --font-manrope: var(--font-manrope), "Playfair Display", serif;
+  --font-inter: var(--font-inter), "Outfit", sans-serif;
 
   --color-chess-green: #2d5a27;
   --color-chess-dark: #154212;
   --color-chess-light: #e4e4cc;
   --color-chess-bg: #f8faf4;
+  --color-text-primary: #0f172a;
+}
+
+.dark {
+  --color-chess-green: #3fb950;
+  --color-chess-dark: #238636;
+  --color-chess-light: #1e293b;
+  --color-chess-bg: #0f172a;
+  --color-text-primary: #f8fafc;
 }
 
 @layer base {
   body {
     font-family: var(--font-inter);
     background-color: var(--color-chess-bg);
-    color: #0f172a;
+    color: var(--color-text-primary);
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-manrope);
+    letter-spacing: -0.025em;
   }
 }
 

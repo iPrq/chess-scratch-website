@@ -103,6 +103,12 @@ export default function ChessBoard({ gameId, playerColor, backendGame, error, ma
       if (selected[0] === row && selected[1] === col) {
         setSelected(null);
       } else {
+        const isLegal = localLegalMoves.some(([lr, lc]) => lr === row && lc === col);
+        if (!isLegal) {
+          setSelected(null);
+          return;
+        }
+
         // Attempt move
         const piece = board[selected[0]][selected[1]];
         if (piece && piece.type.toLowerCase() === "pawn" && (row === 0 || row === 7)) {
@@ -150,7 +156,7 @@ export default function ChessBoard({ gameId, playerColor, backendGame, error, ma
         </div>
       )}
 
-      <div className="relative grid w-full aspect-square grid-cols-8 overflow-hidden rounded-[4px] shadow-[0_24px_50px_-12px_rgba(25,28,25,0.06)] bg-[#f8faf4] border-4 border-[#154212]/5">
+      <div className="relative grid w-full aspect-square grid-cols-8 overflow-hidden rounded-[4px] shadow-2xl bg-chess-bg border-4 border-chess-green/30 dark:border-chess-dark/80">
         {board.map((rowArr: any[], row: number) =>
           rowArr.map((piece: any, col: number) => {
             const isDark = (row + col) % 2 === 1;
@@ -176,8 +182,8 @@ export default function ChessBoard({ gameId, playerColor, backendGame, error, ma
                 onClick={() => handleClick(row, col)}
                 className="relative aspect-square cursor-pointer select-none flex items-center justify-center transition-all bg-chess-bg"
                 style={{ 
-                  boxShadow: isCheckedKing ? "inset 0 0 0 4px #dc2626" : isSelected ? "inset 0 0 0 6px rgba(21,66,18,0.3)" : "none",
-                  backgroundColor: isDark ? "#2d5a27" : "#e4e4cc" 
+                  boxShadow: isCheckedKing ? "inset 0 0 0 4px #dc2626" : isSelected ? "inset 0 0 0 6px var(--color-chess-green)" : "none",
+                  backgroundColor: isDark ? "var(--color-chess-green)" : "var(--color-chess-light)" 
                 }}
               >
                 {piece && (
